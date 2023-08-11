@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import firebase from 'firebase/compat/app';
-import { initializeApp } from "firebase/app";
 import 'firebase/compat/firestore';
+
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPNx36E-nQR6_xIvgrw8FK1YoMcr_IIVY",
@@ -16,7 +17,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -25,4 +26,10 @@ root.render(
   </React.StrictMode>
 );
 
+// ReactDOM.render(
+//   <React.StrictMode>
+//     <App />
+//   </React.StrictMode>,
+//   document.getElementById('root')
+// );
 

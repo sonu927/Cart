@@ -1,44 +1,87 @@
 import React from 'react';
 import Cart from "./Cart";
 import Navbar from "./Navbar";
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+
 
 class App extends React.Component {
    constructor(){
         super();
         this.state = {
-            products: [
-                {
-                    title: 'Phone',
-                    price: 999,
-                    qty: 2,
-                    img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGhvbmV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60',
-                    id: 1
-                },
-                {
-                    title: 'Watch',
-                    price: 99,
-                    qty: 10,
-                    img: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d2F0Y2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60',
-                    id: 2
-                },
-                {
-                    title: 'Laptop',
-                    price: 9999,
-                    qty: 1,
-                    img: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bGFwdG9wfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
-                    id: 3
-                }
-            ]
+            products: [],
+            loading: true
         }
+        this.db = firebase.firestore()
     }
+
+    componentDidMount(){
+      // firebase
+      //       .firestore()
+      //       .collection('products')
+      //       .get()
+      //       .then((snapshot) => {
+      //         console.log(snapshot);
+
+      //         snapshot.docs.forEach((doc) => {
+      //             console.log(doc.data());
+      //         })
+
+      //         const products = snapshot.docs.map((doc) => {
+      //           const data = doc.data();
+      //           data['id'] = doc.id;
+      //           return data;
+      //         })
+
+      //         this.setState({
+      //           products,
+      //           loading: false
+      //         });
+      //       })
+
+      this.db
+            .collection('products')
+            .onSnapshot((snapshot) => {
+              console.log(snapshot);
+
+              snapshot.docs.forEach((doc) => {
+                  console.log(doc.data());
+              })
+
+              const products = snapshot.docs.map((doc) => {
+                const data = doc.data();
+                data['id'] = doc.id;
+                return data;
+              })
+
+              this.setState({
+                products,
+                loading: false
+              });
+            });
+    }
+
     handleIncreaseQuantity = (product)=>{
         const {products} = this.state;
         const index = products.indexOf(product);
-        products[index].qty += 1;
+        // products[index].qty += 1;
 
-        this.setState({
-            products
-        });
+        // this.setState({
+        //     products
+        // });
+
+        const docRef = this.db.collection('products').doc(products[index].id);
+
+        docRef
+            .update({
+              qty: products[index].qty+1
+            })
+            .then(()=>{
+              console.log('Updated Sucessfully');
+            })
+            .catch((error) => {
+              console.log('ERROR : ',error);
+            })
     }
     handleDecreaseQuantity = (product)=>{
         const {products} = this.state;
@@ -46,19 +89,42 @@ class App extends React.Component {
         if(products[index].qty === 0){
             return;
         }
-        products[index].qty -= 1;
+        // products[index].qty -= 1;
 
-        this.setState({
-            products
-        });
+        // this.setState({
+        //     products
+        // });
+        const docRef = this.db.collection('products').doc(products[index].id);
+
+        docRef
+            .update({
+              qty: products[index].qty-1
+            })
+            .then(()=>{
+              console.log('Updated Sucessfully');
+            })
+            .catch((error) => {
+              console.log('ERROR : ',error);
+            })
     }
     handleDeleteProduct = (id)=>{
-        const {products} = this.state;
-        const items = products.filter((item)=> item.id !== id);
+        //const {products} = this.state;
+        // const items = products.filter((item)=> item.id !== id);
 
-        this.setState({
-            products: items
-        });
+        // this.setState({
+        //     products: items
+        // });
+        const docRef = this.db.collection('products').doc(id);
+
+        docRef
+          .delete()
+          .then(()=>{
+              console.log('Deleted Sucessfully');
+            })
+            .catch((error) => {
+              console.log('ERROR : ',error);
+            })
+
     }
     getCount = ()=>{
       const {products} = this.state;
@@ -80,19 +146,40 @@ class App extends React.Component {
 
       return total;
     }
+
+    addProduct = () => {
+      this.db
+      .collection('products')
+      .add({
+        img: '',
+        price: 9000,
+        qty: 2,
+        title: 'Washing Machine'
+      })
+      .then((docRef) => {
+        console.log('Product has been added ', docRef);
+      })
+      .catch((error)=>{
+        console.error('Error : ',error);
+      })
+    }
+
+
   render(){
-    const {products} = this.state;
+    const {products,loading} = this.state;
     return (
       <div className="App">
         <Navbar 
           count = {this.getCount()}
         />
+        {/* <button onClick={this.addProduct} style={{ padding:15 ,fontSize:15 }}>Add Product</button> */}
         <Cart 
           products = {products}
           handleIncreaseQuantity = {this.handleIncreaseQuantity} 
           handleDecreaseQuantity = {this.handleDecreaseQuantity} 
           handleDeleteProduct = {this.handleDeleteProduct}
         />
+        {loading && <h1>Loading....</h1>}
         <div>TOTAL: {this.getTotal()}</div>
       </div>
       
